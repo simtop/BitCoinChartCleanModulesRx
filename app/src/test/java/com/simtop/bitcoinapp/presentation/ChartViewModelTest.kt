@@ -1,9 +1,9 @@
 package com.simtop.bitcoinapp.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.simtop.bitcoinapp.getValueForTest
-import com.simtop.bitcoinapp.presentation.chart.ChartViewState
 import com.simtop.bitcoinapp.presentation.chart.ChartViewModel
+import com.simtop.bitcoinapp.presentation.chart.ChartViewState
+import com.simtop.bitcoinapp.testObserver
 import com.simtop.domain.usecases.GetMarketPriceUseCase
 import com.simtop.testutils.fakeMarketPriceModel
 import io.mockk.coEvery
@@ -32,45 +32,37 @@ internal class ChartViewModelTest {
         coEvery { getMarketPriceUseCase.execute(any()) } returns Single.just(
             fakeMarketPriceModel
         )
+        val liveDataUnderTest = chartViewModel.chartViewState.testObserver()
 
         chartViewModel.getMarketPrice()
-
-        chartViewModel.chartViewState.getValueForTest() shouldBeEqualTo ChartViewState.Loading
-
-        Thread.sleep(1000)
 
         coVerify(exactly = 1) {
             getMarketPriceUseCase.execute(any())
         }
 
-        val response = chartViewModel.chartViewState.getValueForTest()
+        liveDataUnderTest.observedValues.size shouldBeEqualTo 2
+        liveDataUnderTest.observedValues[0] shouldBeEqualTo ChartViewState.Loading
+        liveDataUnderTest.observedValues[1] shouldBeEqualTo ChartViewState.Success(fakeMarketPriceModel)
 
-        if (response is ChartViewState.Success) {
-            response.result shouldBeEqualTo fakeMarketPriceModel
-        }
     }
 
     @Test
     fun `when we get market price model it fails and shows error`() {
-
+        val errorName = "Error getting list of categories"
         coEvery { getMarketPriceUseCase.execute(any()) } returns Single.error(
-            Exception("Error getting list of categories")
+            Exception(errorName)
         )
 
+        val liveDataUnderTest = chartViewModel.chartViewState.testObserver()
+
         chartViewModel.getMarketPrice()
-
-        chartViewModel.chartViewState.getValueForTest() shouldBeEqualTo ChartViewState.Loading
-
-        Thread.sleep(1000)
 
         coVerify(exactly = 1) {
             getMarketPriceUseCase.execute(any())
         }
 
-        val response = chartViewModel.chartViewState.getValueForTest()
-
-        if (response is ChartViewState.Error) {
-            response.result.message shouldBeEqualTo "Error getting list of categories"
-        }
+        liveDataUnderTest.observedValues.size shouldBeEqualTo 2
+        liveDataUnderTest.observedValues[0] shouldBeEqualTo ChartViewState.Loading
+        liveDataUnderTest.observedValues[1] shouldBeEqualTo ChartViewState.Error(errorName)
     }
 }

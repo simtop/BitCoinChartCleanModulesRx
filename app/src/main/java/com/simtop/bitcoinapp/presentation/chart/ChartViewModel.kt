@@ -27,7 +27,7 @@ class ChartViewModel @Inject constructor(
             .subscribeOn(Schedulers.io())
             .subscribe(
                 { _chartViewState.postValue(ChartViewState.Success(it)) },
-                { _chartViewState.postValue(ChartViewState.Error(it as Exception)) }
+                { _chartViewState.postValue(ChartViewState.Error(it.message ?: "Default Error")) }
             )
             .also { compositeDisposable.add(it) }
     }
@@ -40,6 +40,6 @@ class ChartViewModel @Inject constructor(
 
 sealed class ChartViewState<out T> {
     data class Success<out T>(val result: T) : ChartViewState<T>()
-    data class Error<out T>(val result: Exception) : ChartViewState<T>()
+    data class Error(val result: String) : ChartViewState<Nothing>()
     object Loading : ChartViewState<Nothing>()
 }

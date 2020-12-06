@@ -68,7 +68,7 @@ class ChartFragment : Fragment(R.layout.fragment_chart_fragment) {
                 fragmentChartFragmentBinding.chartView.gone()
                 fragmentChartFragmentBinding.progressBar.gone()
                 fragmentChartFragmentBinding.errorState.visible()
-                requireActivity().showToast(it.result.message.toString())
+                requireActivity().showToast(it.result)
             }
             ChartViewState.Loading -> {
                 fragmentChartFragmentBinding.chartView.gone()
