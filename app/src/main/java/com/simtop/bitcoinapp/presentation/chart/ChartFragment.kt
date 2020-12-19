@@ -25,7 +25,8 @@ class ChartFragment : Fragment(R.layout.fragment_chart_fragment) {
         viewModelFactory
     }
 
-    private lateinit var fragmentChartFragmentBinding: FragmentChartFragmentBinding
+    private var _fragmentChartFragmentBinding: FragmentChartFragmentBinding? = null
+    private val fragmentChartFragmentBinding get() = _fragmentChartFragmentBinding
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -33,13 +34,9 @@ class ChartFragment : Fragment(R.layout.fragment_chart_fragment) {
         appComponent.inject(this)
 
         val binding = FragmentChartFragmentBinding.bind(view)
-        fragmentChartFragmentBinding = binding
-
-        (requireActivity() as MainActivity).showToolbar(false)
+        _fragmentChartFragmentBinding = binding
 
         setUpRetryListener()
-
-        chartViewModel.getMarketPrice()
 
         observe(
             chartViewModel.chartViewState,
@@ -50,7 +47,7 @@ class ChartFragment : Fragment(R.layout.fragment_chart_fragment) {
     }
 
     private fun setUpRetryListener() {
-        fragmentChartFragmentBinding.retry.setOnClickListener {
+        fragmentChartFragmentBinding?.retry?.setOnClickListener {
             chartViewModel.getMarketPrice()
         }
     }
@@ -58,22 +55,27 @@ class ChartFragment : Fragment(R.layout.fragment_chart_fragment) {
     private fun renderChartViewState(it: ChartViewState<MarketPriceModel>) {
         when (it) {
             is ChartViewState.Success -> {
-                fragmentChartFragmentBinding.chartView.visible()
-                fragmentChartFragmentBinding.progressBar.gone()
-                fragmentChartFragmentBinding.errorState.gone()
-                fragmentChartFragmentBinding.chartView.bind(it.result)
+                fragmentChartFragmentBinding?.chartView?.visible()
+                fragmentChartFragmentBinding?.progressBar?.gone()
+                fragmentChartFragmentBinding?.errorState?.gone()
+                fragmentChartFragmentBinding?.chartView?.bind(it.result)
 
             }
             is ChartViewState.Error -> {
-                fragmentChartFragmentBinding.chartView.gone()
-                fragmentChartFragmentBinding.progressBar.gone()
-                fragmentChartFragmentBinding.errorState.visible()
+                fragmentChartFragmentBinding?.chartView?.gone()
+                fragmentChartFragmentBinding?.progressBar?.gone()
+                fragmentChartFragmentBinding?.errorState?.visible()
                 requireActivity().showToast(it.result)
             }
             ChartViewState.Loading -> {
-                fragmentChartFragmentBinding.chartView.gone()
-                fragmentChartFragmentBinding.progressBar.visible()
+                fragmentChartFragmentBinding?.chartView?.gone()
+                fragmentChartFragmentBinding?.progressBar?.visible()
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _fragmentChartFragmentBinding = null
     }
 }
